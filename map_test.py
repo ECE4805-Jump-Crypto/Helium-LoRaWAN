@@ -14,7 +14,7 @@ the proposed node location.
 lat = 41.881832
 lon = -87.623177
 dist = 20000 #distance in meters
-url = "https://api.helium.io/v1/hotspots/location/distance?lat={}&lon={}&distance={}&page[size]=1000".format(lat,lon,dist)
+url = "https://api.helium.io/v1/hotspots/location/distance?lat={}&lon={}&distance={}".format(lat,lon,dist)
 orig_url = url
 #defauilt payload and headers
 payload = {}
