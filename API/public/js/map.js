@@ -61,7 +61,7 @@ async function add_marker(event) {
 
   marker.setLngLat(coordinates).addTo(map);
   //here add existing nodes--------------------------------------------------
-  Static.hotspots = totalData[0].data.map(hotspot => {
+  var hotspots = totalData[0].data.map(hotspot => {
     //if(hotspot.status.online == 'online'){
     return {
 
@@ -82,12 +82,12 @@ async function add_marker(event) {
     }
   });  
   // here add map source/features
-  loadMap(); 
+  loadMap(hotspots); 
   console.log('if load');
 
 }
 
-function loadMap() {
+function loadMap(hotspots) {
   //-----------------------------------------------
   //Change load on to click on
   //-----------------------------------------------
@@ -169,7 +169,7 @@ function loadMap() {
               type: 'geojson',
               data: {
                   type: 'FeatureCollection',
-                  features: Static.hotspots,
+                  features: hotspots,
               }
   
           });
@@ -189,31 +189,32 @@ function loadMap() {
       //);
   
       //click and popup
-      map.on('click', 'places', function () {
+      var popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnclick: false
+      });
+      // Change the cursor to a pointer when the mouse is over the places layer.
+      map.on('mouseenter', 'places', function (hotspots) {
+          map.getCanvas().style.cursor = 'pointer';
+
           // Copy coordinates array.
-          const coordinates = Static.hotspots.features[0].geometry.coordinates.slice();
-          const description = Static.hotspots.features[0].properties.description;
+          const coordinates = hotspots.features[0].geometry.coordinates.slice();
+          const description = hotspots.features[0].properties.description;
   
           // Ensure that if the map is zoomed out such that multiple
           // copies of the feature are visible, the popup appears
           // over the copy being pointed to.
-          while (Math.abs(Static.hotspots.lngLat.lng - coordinates[0]) > 180) {
-              coordinates[0] += Static.hotspots.lngLat.lng > coordinates[0] ? 360 : -360;
+          while (Math.abs(hotspots.lngLat.lng - coordinates[0]) > 180) {
+              coordinates[0] += hotspots.lngLat.lng > coordinates[0] ? 360 : -360;
           }
   
-          new mapboxgl.Popup()
-              .setLngLat(coordinates)
-              .setHTML(description)
-              .addTo(map);
-      });
-      // Change the cursor to a pointer when the mouse is over the places layer.
-      map.on('mouseenter', 'places', function () {
-          map.getCanvas().style.cursor = 'pointer';
+          popup.setLngLat(coordinates).setHTML(description).addTo(map);
       });
   
       // Change it back to a pointer when it leaves.
       map.on('mouseleave', 'places', function () {
           map.getCanvas().style.cursor = '';
+          popup.remove(); 
       });
   
   
