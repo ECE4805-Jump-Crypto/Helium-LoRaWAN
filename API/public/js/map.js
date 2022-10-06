@@ -1,6 +1,6 @@
 //if needed to store information
 class Static {
-  static hotspots;
+  static counter = 0;
 }
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhcGVpMzZlIiwiYSI6ImNsN3VrZjdxajAya2ozdW1zZ3cwaTl1MXUifQ.7dWrn7Jx3zvbocP2BmKGMQ';
@@ -228,6 +228,11 @@ map.on('click', (event) => {
     center: event.lngLat,
   })
   console.log('try');
+  if (Static.counter >= 0) {
+    map.removeImage('pulsing-dot');
+    map.removeLayer('places');
+    map.removeSource('places');
+  }
 });
 
 
