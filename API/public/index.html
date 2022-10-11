@@ -28,14 +28,73 @@
     <title>Helium Nodes</title>
 </head>
 <body>
+    <style>
+        .mp{
+            width: 100%; 
+            height: 700px; 
+            border-radius:0vmax;
+            position: relative;
+         
+        }
+        .text{
+            height: 20%;
+            width: 20%;
+            z-index : 10;
+            float:right;
+            position: relative;
+        
+        }
+        /* .wrapper{
+            display: flex;
+        } */
+        .money{
+            font-size: 28px;
+            margin: 15% 5% 0 5%;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border-radius: 5px;
+            position: relative;
+        }
+        .coordinates {
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            position: absolute;
+            bottom: 40px;
+            left: 10px;
+            padding: 5px 10px;
+            margin: 0;
+            font-size: 11px;
+            line-height: 18px;
+            border-radius: 3px;
+            z-index: 10;
+       
+        }
+    </style>
     <div class="container my-4">
         <h1 class="display-4 text-center">
             <i class="fas fa-map-location-dot mr-4"></i>Helium Nodes
         </h1>
         <a href="add.html" class="my-2 mb-4 btn btn-info mb-4">Add Node</a>
-        <div id="map" style="width: 100%; height: 700px; border-radius:0vmax;">
+        <div class="wrapper">
+            <div class="mp"id="map" >
+                <div class="text">
+                    <div class="money">HNT:</div>
+                    <div class="money" id="predict">Prediction:</div>
+                </div>
+                <div class="coordinates"id="coordinates">
+                    
+                </div>
+
+            </div>
+           
+
         </div>
+             
+        
+        
     </div>
+    
 
     <script src="js/map.js"></script>
 
