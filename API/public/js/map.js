@@ -1,10 +1,26 @@
 //if needed to store information
 class Static {
   static counter = 0;
+  static Lat ='';
+  static Lng=''; 
+  static Gain= '';
+  static Elevation='';
 }
+
+var storage = window.sessionStorage; 
+//storage.setItem('Counter','0'); 
+
+const nodeForm = document.getElementById('Hotspots-form');
+const nodeGain = document.getElementById('Hotspots-gain');
+const nodeElevation = document.getElementById('Hotspots-elevation');
+
+
+
+
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhcGVpMzZlIiwiYSI6ImNsN3VrZjdxajAya2ozdW1zZ3cwaTl1MXUifQ.7dWrn7Jx3zvbocP2BmKGMQ';
 var Coord = document.getElementById('coordinates');
+var HNT = document.getElementById('price');
 var map = new mapboxgl.Map({
   container: "map",
   style: 'mapbox://styles/shapei36e/cl822g760004a15sey3q5ovoo',
@@ -16,7 +32,54 @@ var marker = new mapboxgl.Marker();
 var nodes = new mapboxgl.Marker();
 
 
+// Fetch HNT price from  API
+async function getHNTPrice(){
+  var hntRes = await fetch('https://api.helium.io/v1/oracle/prices/current');
+  var hntData = await hntRes.json();
 
+  var hntPrice = hntData.data.price; 
+  hntPrice = hntPrice/100000000; 
+  hntPrice = hntPrice.toFixed(2); 
+  console.log(hntPrice); 
+  HNT.innerHTML = `HNT Price:   $${hntPrice}`
+  
+}
+
+// Get calculated prediction from backend
+// async function getPrediction(){
+//   var pdRes = await fetch('https://api.helium.io/v1/oracle/prices/current');
+//   var pdData = await pdRes.json();
+
+//   var hntPrice = pdData.data.price; 
+//   hntPrice = hntPrice/100000000; 
+//   hntPrice = hntPrice.toFixed(2); 
+//   console.log(hntPrice); 
+//   HNT.innerHTML = `HNT Price:   $${hntPrice}`
+  
+// }
+async function getNodeinfor(){
+  var ndRes = await fetch('/api/v1/hotspots');
+  var ndData = await ndRes.json();
+  var nd = ndData.data;
+  var Lat = nd[nd.length-1].Lat;
+  var Lng = nd[nd.length-1].Lng;
+  var Gain = nd[nd.length-1].gain;
+  var Elevation = nd[nd.length-1].elevation;
+  console.log(storage); 
+  node.innerHTML = `Node to be test: <br />Lat:${Lat},<br /> Lng:${Lng}, <br />Gain:${Gain}, <br />Elevation:${Elevation}`
+  
+}
+
+// Get prediction
+async function getPrediction(){
+  var pdRes = await fetch('http://127.0.0.1:5000/api/v1/prediction');
+  var pdData = await pdRes.json();
+
+  var pdPD = pdData[0].Prediction; 
+  console.log(pdData); 
+  predict.innerHTML = `Prediction:   ${pdPD}`
+  
+}
 
 // Add marker(added node) by click 
 async function add_marker(event) {
@@ -24,18 +87,15 @@ async function add_marker(event) {
   console.log('Lng:', coordinates.lng, 'Lat:', coordinates.lat);
   var Lat = coordinates.lat.toString();
   var Lng = coordinates.lng.toString();
+  Static.Lat = coordinates.lat;
+  Static.Lng = coordinates.lng; 
+  console.log('sLng:', Static.Lng, 'sLat:', Static.Lat);
   Coord.innerHTML= `Longitude: ${coordinates.lng}<br />Latitude: ${coordinates.lat}`;
 
 
   // Update API link
   originalUrl = 'https://api.helium.io/v1/hotspots/location/distance?lat=' + Lat + '&lon=' + Lng + '&distance=2000';
   console.log(originalUrl);
-
-
-
-
-
-
 
 
   // Fetch API and get nodes data
@@ -198,6 +258,7 @@ function loadMap(hotspots) {
     }
   });
   Static.counter++;
+  console.log(Static.counter);
   //}
   //);
 
@@ -248,6 +309,140 @@ map.on('click', (event) => {
   }
 });
 
+
+// cookies    
+// function setCookie(name, value, seconds) {
+//   seconds = seconds || 0;      
+//   var expires = "";
+//   if (seconds != 0) {         
+//     var date = new Date();
+//     date.setTime(date.getTime() + (seconds * 1000));
+//     expires = "expires=" + date.toGMTString();
+//   }
+//   document.cookie = name + "=" + escape(value) + expires + "; path=/"; 
+// }  
+//  //get cookie    
+//  function getCookie(name) {
+//   var nameEQ = name + "=";
+//   var ca = document.cookie.split(';');     
+//   for (var i = 0; i < ca.length; i++) {
+//     var c = ca[i];     
+//     while (c.charAt(0) == ' ') {    
+//       c = c.substring(1, c.length);    
+//     }
+//     if (c.indexOf(nameEQ) == 0) {    
+//       return unescape(c.substring(nameEQ.length, c.length)); 
+//     }
+//   }
+//   return false;
+// }
+
+
+
+
+
+
+
+
+// Add node
+async function addNodes(e){
+  e.preventDefault();
+  
+  if(Static.Lat === ''||Static.Lng === ''){
+      alert('Please click to choose a location on the map');
+      return; 
+  }
+  console.log(storage.getItem('Gain'));
+    
+  // storage.setItem('Counter','1');
+  // storage.setItem('Gain',nodeGain.value);
+  // storage.setItem('Elevation',nodeElevation.value);
+
+  
+  // if(nodeGain.value != '' && nodeElevation.value !=''){
+  //     storage.setItem('Gain',nodeGain.value);
+  //     storage.setItem('Elevation',nodeElevation.value);
+  // }
+  
+    if (nodeGain.value === '' ||nodeElevation.value ===''){
+      if(storage.getItem('Gain') ===null||storage.getItem('Elevation')===null){
+      
+      alert('Please fill in the fields');
+      return;
+      }   else{
+        console.log(typeof(nodeElevation.value));
+        // storage.setItem('Gain',nodeGain.value);
+        // storage.setItem('Elevation',nodeElevation.value);
+        // setCookie('Gain','1');
+        // setCookie('Elevation','2');
+        Static.Elevation = storage.getItem('Elevation');
+        Static.Gain = storage.getItem('Gain');
+        // storage.removeItem('Gain');
+        // storage.removeItem('Elevation');
+  
+  
+        console.log(Static);
+      }
+    
+    }
+    else{
+      console.log(typeof(nodeElevation.value));
+      storage.setItem('Gain',nodeGain.value);
+      storage.setItem('Elevation',nodeElevation.value);
+      // setCookie('Gain','1');
+      // setCookie('Elevation','2');
+      Static.Elevation = storage.getItem('Elevation');
+      Static.Gain = storage.getItem('Gain');
+      // storage.removeItem('Gain');
+      // storage.removeItem('Elevation');
+
+
+      console.log(Static);
+    }
+    
+
+
+  const sendBody = {
+      // HotspotsId: nodeName.value,
+      // address: nodeAddress.value,
+      Lat: Static.Lat,
+      Lng: Static.Lng,
+      gain:Static.Gain,
+      elevation:Static.Elevation,
+  }
+  Static.Lat =='';
+  Static.Lng ==''; 
+
+  try {
+      console.log(JSON.stringify(sendBody))
+      const res = await fetch('/api/v1/hotspots',{
+          method: 'POST',
+          headers: {
+              'Content-Type':'application/json'
+          },
+          body: JSON.stringify(sendBody)
+      });
+      if(res.status === 400){
+          throw Error('Nodes already exists!')
+
+      }
+      alert('Node added!');
+      window.location.href = '/index.html';
+      
+  } catch (error) {
+      alert(error);
+      return;
+  }
+}
+
+
+
+nodeForm.addEventListener('submit', addNodes);
+
+
+getHNTPrice(); 
+getNodeinfor();
+getPrediction()
 
 
 

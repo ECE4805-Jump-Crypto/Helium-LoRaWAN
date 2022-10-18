@@ -48,7 +48,7 @@
             display: flex;
         } */
         .money{
-            font-size: 28px;
+            font-size: 20px;
             margin: 15% 5% 0 5%;
             padding: 10px;
             background: rgba(0,0,0,0.5);
@@ -68,31 +68,75 @@
             line-height: 18px;
             border-radius: 3px;
             z-index: 10;
-       
         }
+        .form_1 {
+            width: 35%;
+            float: left;
+            
+            margin: 2%;
+            position: relative;
+
+        }    
+        .form_2 {
+            width: 35%;
+            float: left;
+            
+            margin: 2%;
+            position: relative;
+        }   
+        .add {
+            float: right;
+            line-height: 135px;
+            margin:0;
+            position: relative;
+        }
+        .node {
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            position: absolute;
+            bottom: 40px;
+            right: 10px;
+            padding: 5px 10px;
+            margin: 0;
+            font-size: 11px;
+            line-height: 18px;
+            border-radius: 3px;
+            z-index: 10;
+        }
+      
     </style>
     <div class="container my-4">
         <h1 class="display-4 text-center">
             <i class="fas fa-map-location-dot mr-4"></i>Helium Nodes
         </h1>
-        <a href="add.html" class="my-2 mb-4 btn btn-info mb-4">Add Node</a>
+        <form id="Hotspots-form" class="my-4">
+            <div class="form_1">
+                <label for="Hotspots-gain">Nodes Gain</label>
+                <input type="text" id="Hotspots-gain" class="form-control">
+            </div>
+            <div class="form_2">
+                <label for="Hotspots-elevation">Nodes Elevation</label>
+                <input type="text" id="Hotspots-elevation" class="form-control">
+            </div>
+            <div class="add">
+                <button type="submit" class="my-2 btn btn-primary">Add Node</button>
+            </div>
+        </form> 
+        
         <div class="wrapper">
             <div class="mp"id="map" >
                 <div class="text">
-                    <div class="money">HNT:</div>
-                    <div class="money" id="predict">Prediction:</div>
+                    <div class="money" id="price"></div>
+                    <div class="money" id="predict"></div>
                 </div>
-                <div class="coordinates"id="coordinates">
-                    
-                </div>
-
+                <div class="coordinates"id="coordinates"></div>
+                <div class="node" id="node"></div>
             </div>
-           
-
         </div>
-             
+
         
         
+               
     </div>
     
 
