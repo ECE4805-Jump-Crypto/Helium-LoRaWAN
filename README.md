@@ -2,7 +2,15 @@
 ## Method to use flask run on backend
 1. Download app.py
 
-2. In terminal, for Mac input:
+2.import packages:
+```
+pip install flask
+```
+```
+pip install flask_cors
+```
+
+3. In terminal, for Mac input:(after "=" is the file name)
 ```
 export FLASK_APP=app
 ```
@@ -16,9 +24,9 @@ $env:FLASK_APP = "app"
 
 ```
 
-3. Set environment
+4. Set environment
 ```
-FLASK_ENV=dev
+set FLASK_ENV=dev
 
 ```
 or 
@@ -27,7 +35,7 @@ $ FLASK_ENV=development
 
 ```
 
-4. Run(Frontend and Backend must run simultaneously)
+5. Run(Frontend and Backend must run simultaneously)
 ```
 flask run
 
