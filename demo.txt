@@ -1,0 +1,1 @@
+python3 src/simulate.py --lat 37.242005 --lng -80.41623167 --agl 3 --gain 6

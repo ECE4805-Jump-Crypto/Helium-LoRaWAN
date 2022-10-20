@@ -1,3 +1,7 @@
 # Virtual Environments
-
+rf_data/*.hgt
+rf_data/*.sdf
+rf_data/*.qth
+src/___pycache__/
+*.pyc
 .venv
