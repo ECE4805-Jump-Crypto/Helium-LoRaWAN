@@ -3,8 +3,8 @@ reward_tx = 0   #Reward for transmitter
 reward_rx = 0   #Reward for each receiver
 
 #Witness information will be pulled from nodes
-invalid_witnesses = 0
-valid_witnesses = 10
+invalid_witnesses = 10
+valid_witnesses = 2
 witnesses = invalid_witnesses + valid_witnesses
 
 redunacy = 4    #Redundancy is 4, but I can pull this from Helium in case it ever updates
@@ -24,8 +24,8 @@ if reward_tx > 2:
 total_rx = reward_rx * valid_witnesses  #Total reward for recievers
 tx_scale = valid_witnesses / witnesses  #Used to determine reward for transmitters
 total_reward = total_rx + reward_tx * tx_scale  #total rewards calculation
-print("Tx reward: ", (reward_tx * tx_scale)/(witnesses))
-print("Rx reward: ", total_rx/witnesses)
+print("Tx reward: ", (reward_tx * tx_scale))
+print("Rx reward per witness: ", reward_rx)
 print("Total reward: ", total_reward)
 
 #HIP 17
@@ -34,15 +34,15 @@ N = [2,2,2,2,1,1,1] #number of neighboring hex’s that must meet Density_tgt
 density_tgt = [1,1,1,5,25,100,250] #Target number of hotspots in target hex res
 density_max = [1,2,4,20,100,400,800] #maximum number of hotspots to consider for target hex res
 
-n = [5,5,5,5,4,4,4] # occupied count (neighbors)
-N_miner = [1,1,1,8,20,90,300]    #Needs to be pulled, number of interactive miners in res hex
+n = [1,1,1,1,1,1,1] # occupied count (neighbors)
+N_miner = [1,1,2,9,21,91,301]    #Needs to be pulled, number of interactive miners in res hex
 
 hex_density_limit = []
 hex_transmit_scale = []
 for i in range(7):  #loops through res 10-4
     hex_density_limit.append(min(density_tgt[i] * max(n[i] - N[i] + 1,1), density_max[i]))
     hex_transmit_scale.append(min(1, hex_density_limit[i]/N_miner[i]))
-    # print(n, ",", hex_density_limit)
+    # print(i, ",", hex_density_limit[i])
 
 net_transmit_scale = 1
 for i in range (len(hex_transmit_scale)):
