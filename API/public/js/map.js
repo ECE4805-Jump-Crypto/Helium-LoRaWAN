@@ -133,8 +133,12 @@ async function add_marker(event) {
 
   marker.setLngLat(coordinates).addTo(map);
   //here add existing nodes--------------------------------------------------
-  var hotspots = newObj.data.map(hotspot => {
-    //if(hotspot.status.online == 'online'){
+  //online 
+  var obj = newObj.data.filter(item => item.status.online=="online");
+  console.log(obj);
+  //const params = list.filter(item=> arr.indexOf(item.id) > -1)
+  var hotspots = obj.map(hotspot => {
+    //if(hotspot.status.online == 'online'){ 
     return {
 
       type: 'Feature',
@@ -153,13 +157,36 @@ async function add_marker(event) {
       }
     }
   });
+  // offline 
+  var offobj = newObj.data.filter(item => item.status.online=="offline");
+  var offhotspots = offobj.map(offhotspot => {
+    //if(hotspot.status.online == 'online'){ 
+    return {
+
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [offhotspot.lng, offhotspot.lat] // icon position [lng, lat]
+      },
+      properties: {
+        description:
+          //'blabla'
+          '<p> </p>' +
+          '<p><strong>Name: </strong>' + offhotspot.name +
+          '<p><strong>Gain: </strong>' + offhotspot.gain +
+          '<p><strong>Status: </strong>' + offhotspot.status.online +
+          '<p><strong>Elevation: </strong>' + offhotspot.elevation + '</p>'
+      }
+    }
+  });
+
   // here add map source/features
-  loadMap(hotspots);
+  loadMap(hotspots,offhotspots);
   console.log('if load');
 
 }
 
-function loadMap(hotspots) {
+function loadMap(hotspots,offhotspots) {
   //-----------------------------------------------
   //Change load on to click on
   //-----------------------------------------------
@@ -199,7 +226,8 @@ function loadMap(hotspots) {
         0,
         Math.PI * 2
       );
-      context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
+      //context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
+      context.fillStyle = `rgba(178, 222, 39, ${1 - t})`;
       context.fill();
 
       // Draw the inner circle.
@@ -211,7 +239,7 @@ function loadMap(hotspots) {
         0,
         Math.PI * 2
       );
-      context.fillStyle = 'rgba(255, 100, 100, 1)';
+      context.fillStyle = 'rgba(46, 204, 113, 1)';
       context.strokeStyle = 'white';
       context.lineWidth = 2 + 4 * (1 - t);
       context.fill();
@@ -257,6 +285,30 @@ function loadMap(hotspots) {
       'icon-allow-overlap': true
     }
   });
+
+  map.addSource('offplaces', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: offhotspots,
+    }
+
+  });
+
+  map.addLayer({
+    'id': 'offplaces',
+    'type': 'circle',
+    'source': 'offplaces',
+    'paint': {
+    'circle-color': '#e55e5e',
+    'circle-radius': 3,
+    'circle-stroke-width': 2,
+    'circle-stroke-color': '#ffffff'
+    }
+    });
+
+
+
   Static.counter++;
   console.log(Static.counter);
   //}
@@ -284,12 +336,33 @@ function loadMap(hotspots) {
 
     popup.setLngLat(coordinates).setHTML(description).addTo(map);
   });
+  map.on('mouseenter', 'offplaces', function (offhotspots) {
+    map.getCanvas().style.cursor = 'pointer';
+
+    // Copy coordinates array.
+    const offcoordinates = offhotspots.features[0].geometry.coordinates.slice();
+    const offdescription = offhotspots.features[0].properties.description;
+
+    // Ensure that if the map is zoomed out such that multiple
+    // copies of the feature are visible, the popup appears
+    // over the copy being pointed to.
+    while (Math.abs(offhotspots.lngLat.lng - offcoordinates[0]) > 180) {
+      offcoordinates[0] += offhotspots.lngLat.lng > offcoordinates[0] ? 360 : -360;
+    }
+
+    popup.setLngLat(offcoordinates).setHTML(offdescription).addTo(map);
+  });
 
   // Change it back to a pointer when it leaves.
   map.on('mouseleave', 'places', function () {
     map.getCanvas().style.cursor = '';
     popup.remove();
   });
+  map.on('mouseleave', 'offplaces', function () {
+    map.getCanvas().style.cursor = '';
+    popup.remove();
+  });
+  
 
 
 }
@@ -305,7 +378,9 @@ map.on('click', (event) => {
   if (Static.counter > 0) {
     map.removeImage('pulsing-dot');
     map.removeLayer('places');
+    map.removeLayer('offplaces');
     map.removeSource('places');
+    map.removeSource('offplaces');
   }
 });
 
