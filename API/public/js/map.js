@@ -509,7 +509,21 @@ async function addNodes(e){
       return;
   }
 }
+function placeholder(){
+  if(storage.getItem('Gain') ===null){
+    nodeGain.placeholder = "Suggest: 6 dB";
+  }
+  else{
+    nodeGain.placeholder = `Saved Default:  ${storage.getItem('Gain')} dB`;
+  }
 
+  if(storage.getItem('Elevation') ===null){
+    nodeElevation.placeholder = "Suggest: 10 m";
+  }
+  else{
+    nodeElevation.placeholder = `Saved Default:  ${storage.getItem('Elevation')} m`;
+  }
+}
 
 
 nodeForm.addEventListener('submit', addNodes);
@@ -517,7 +531,8 @@ nodeForm.addEventListener('submit', addNodes);
 
 getHNTPrice(); 
 getNodeinfor();
-getPrediction()
+getPrediction();
+placeholder();
 
 
 
