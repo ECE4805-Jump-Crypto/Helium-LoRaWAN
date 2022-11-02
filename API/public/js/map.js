@@ -5,6 +5,7 @@ class Static {
   static Lng=''; 
   static Gain= '';
   static Elevation='';
+  static center=[-87.623177, 41.881832];
 }
 
 var storage = window.sessionStorage; 
@@ -21,12 +22,17 @@ const nodeElevation = document.getElementById('Hotspots-elevation');
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhcGVpMzZlIiwiYSI6ImNsN3VrZjdxajAya2ozdW1zZ3cwaTl1MXUifQ.7dWrn7Jx3zvbocP2BmKGMQ';
 var Coord = document.getElementById('coordinates');
 var HNT = document.getElementById('price');
-var map = new mapboxgl.Map({
-  container: "map",
-  style: 'mapbox://styles/shapei36e/cl822g760004a15sey3q5ovoo',
-  zoom: 12,
-  center: [-87.623177, 41.881832]
-});
+//center = [storage.getItem('TestLng'), storage.getItem('TestLat')]; 
+// if(storage.getItem('TestLng')!=null && storage.getItem('TestLat')!=null){
+//   Static.center = [storage.getItem('TestLng'), storage.getItem('TestLat')];
+// }
+ 
+
+
+//map.flyTo({center: [storage.getItem('TestLng'), storage.getItem('TestLat')]}); 
+
+
+
 
 var marker = new mapboxgl.Marker();
 var nodes = new mapboxgl.Marker();
@@ -65,10 +71,25 @@ async function getNodeinfor(){
   var Lng = nd[nd.length-1].Lng;
   var Gain = nd[nd.length-1].gain;
   var Elevation = nd[nd.length-1].elevation;
+  storage.setItem('TestLat',Lat);
+  storage.setItem('TestLng',Lng);
+  storage.setItem('TestGain',Gain);
+  storage.setItem('TestElevation',Elevation);
   console.log(storage); 
   node.innerHTML = `Prediction comes from node: <br />Lat:${Lat},<br /> Lng:${Lng}, <br />Gain:${Gain}, <br />Elevation:${Elevation}`
-  
+  Test_cor = [storage.getItem('TestLng'), storage.getItem('TestLat')]; 
+  marker.setLngLat(Test_cor).addTo(map);
+  map.flyTo({center: Test_cor}); 
+  Coord.innerHTML= `Longitude: ${storage.getItem('TestLng')}<br />Latitude: ${storage.getItem('TestLat')}`;
 }
+getNodeinfor();
+
+var map = new mapboxgl.Map({
+  container: "map",
+  style: 'mapbox://styles/shapei36e/cl822g760004a15sey3q5ovoo',
+  zoom: 12,
+  center: [-87.623177, 41.881832]
+});
 
 // Get prediction
 function prediction(){
@@ -93,6 +114,7 @@ async function getPrediction(){
 
 // Add marker(added node) by click 
 async function add_marker(event) {
+  
   var coordinates = event.lngLat;
   console.log('Lng:', coordinates.lng, 'Lat:', coordinates.lat);
   var Lat = coordinates.lat.toString();
@@ -538,9 +560,8 @@ function placeholder(){
 
 nodeForm.addEventListener('submit', addNodes);
 
-
 getHNTPrice(); 
-getNodeinfor();
+
 prediction();
 getPrediction();
 placeholder();
