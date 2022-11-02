@@ -41,7 +41,7 @@ async function getHNTPrice(){
   hntPrice = hntPrice/100000000; 
   hntPrice = hntPrice.toFixed(2); 
   console.log(hntPrice); 
-  HNT.innerHTML = `HNT Price:   $${hntPrice}`
+  HNT.innerHTML = `Oracle Price:   $${hntPrice}`
   
 }
 
@@ -66,18 +66,28 @@ async function getNodeinfor(){
   var Gain = nd[nd.length-1].gain;
   var Elevation = nd[nd.length-1].elevation;
   console.log(storage); 
-  node.innerHTML = `Node to be test: <br />Lat:${Lat},<br /> Lng:${Lng}, <br />Gain:${Gain}, <br />Elevation:${Elevation}`
+  node.innerHTML = `Prediction comes from node: <br />Lat:${Lat},<br /> Lng:${Lng}, <br />Gain:${Gain}, <br />Elevation:${Elevation}`
   
 }
 
 // Get prediction
+function prediction(){
+  predict.innerHTML = `Loading...`; 
+  
+}
 async function getPrediction(){
+ 
   var pdRes = await fetch('http://127.0.0.1:5000/api/v1/prediction');
   var pdData = await pdRes.json();
 
   var pdPD = pdData[0].Prediction; 
   console.log(pdData); 
-  predict.innerHTML = `Prediction:   ${pdPD}`
+ 
+  
+  predict.innerHTML = `Prediction:   ${pdPD}`; 
+
+  
+  
   
 }
 
@@ -531,6 +541,7 @@ nodeForm.addEventListener('submit', addNodes);
 
 getHNTPrice(); 
 getNodeinfor();
+prediction();
 getPrediction();
 placeholder();
 
