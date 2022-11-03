@@ -21,7 +21,7 @@ const nodeElevation = document.getElementById('Hotspots-elevation');
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhcGVpMzZlIiwiYSI6ImNsN3VrZjdxajAya2ozdW1zZ3cwaTl1MXUifQ.7dWrn7Jx3zvbocP2BmKGMQ';
 var Coord = document.getElementById('coordinates');
-var HNT = document.getElementById('price');
+var HNT = document.getElementById('confi');
 //center = [storage.getItem('TestLng'), storage.getItem('TestLat')]; 
 // if(storage.getItem('TestLng')!=null && storage.getItem('TestLat')!=null){
 //   Static.center = [storage.getItem('TestLng'), storage.getItem('TestLat')];
@@ -38,8 +38,13 @@ var marker = new mapboxgl.Marker();
 var nodes = new mapboxgl.Marker();
 
 
-// Fetch HNT price from  API
+// confidence interval
+function confi(){
+  HNT.innerHTML = `Loading...`; 
+  
+}
 async function getHNTPrice(){
+  //need change api to confidence interval
   var hntRes = await fetch('https://api.helium.io/v1/oracle/prices/current');
   var hntData = await hntRes.json();
 
@@ -47,7 +52,7 @@ async function getHNTPrice(){
   hntPrice = hntPrice/100000000; 
   hntPrice = hntPrice.toFixed(2); 
   console.log(hntPrice); 
-  HNT.innerHTML = `Oracle Price:   $${hntPrice}`
+  HNT.innerHTML = `Confidence Interval:   ${hntPrice} HNT`
   
 }
 
@@ -76,7 +81,7 @@ async function getNodeinfor(){
   storage.setItem('TestGain',Gain);
   storage.setItem('TestElevation',Elevation);
   console.log(storage); 
-  node.innerHTML = `Prediction comes from node: <br />Lat:${Lat},<br /> Lng:${Lng}, <br />Gain:${Gain}, <br />Elevation:${Elevation}`
+  node.innerHTML = `Configuration of Hotspot: <br />Lat:${Lat},<br /> Lng:${Lng}, <br />Gain:${Gain}, <br />Elevation:${Elevation}`
   Test_cor = [storage.getItem('TestLng'), storage.getItem('TestLat')]; 
   marker.setLngLat(Test_cor).addTo(map);
   map.flyTo({center: Test_cor}); 
@@ -105,7 +110,7 @@ async function getPrediction(){
   console.log(pdData); 
  
   
-  predict.innerHTML = `Prediction:   ${pdPD}`; 
+  predict.innerHTML = `Prediction:   ${pdPD} HNT`; 
 
   
   
@@ -126,7 +131,7 @@ async function add_marker(event) {
 
 
   // Update API link
-  originalUrl = 'https://api.helium.io/v1/hotspots/location/distance?lat=' + Lat + '&lon=' + Lng + '&distance=2000';
+  originalUrl = 'https://api.helium.io/v1/hotspots/location/distance?lat=' + Lat + '&lon=' + Lng + '&distance=5000';
   console.log(originalUrl);
 
 
@@ -559,7 +564,7 @@ function placeholder(){
 
 
 nodeForm.addEventListener('submit', addNodes);
-
+confi();
 getHNTPrice(); 
 
 prediction();
