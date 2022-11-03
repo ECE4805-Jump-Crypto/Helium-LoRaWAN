@@ -43,16 +43,14 @@ function confi(){
   HNT.innerHTML = `Loading...`; 
   
 }
-async function getHNTPrice(){
+async function getConfi(){
   //need change api to confidence interval
-  var hntRes = await fetch('https://api.helium.io/v1/oracle/prices/current');
-  var hntData = await hntRes.json();
+  var confiRes = await fetch('https://localhost:3000/simulate');
+  var confiData = await confiRes.json();
 
-  var hntPrice = hntData.data.price; 
-  hntPrice = hntPrice/100000000; 
-  hntPrice = hntPrice.toFixed(2); 
-  console.log(hntPrice); 
-  HNT.innerHTML = `Confidence Interval:   ${hntPrice} HNT`
+  var confiLow = confiData.data.interval[0];
+  var confiHigh =  confiData.data.interval[1];
+  HNT.innerHTML = `Confidence Interval:   (${confiLow},${confiHigh}) HNT`
   
 }
 
@@ -104,10 +102,10 @@ function prediction(){
 }
 async function getPrediction(){
  
-  var pdRes = await fetch('http://127.0.0.1:5000/api/v1/prediction');
+  var pdRes = await fetch('http://localhost:3000/simulate');
   var pdData = await pdRes.json();
 
-  var pdPD = pdData[0].Prediction; 
+  var pdPD = pdData.rewards; 
   console.log(pdData); 
  
   
