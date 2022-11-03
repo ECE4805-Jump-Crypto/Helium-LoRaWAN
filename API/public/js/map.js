@@ -72,6 +72,7 @@ async function getNodeinfor(){
   var ndRes = await fetch('/api/v1/hotspots');
   var ndData = await ndRes.json();
   var nd = ndData.data;
+  console.log(nd); 
   var Lat = nd[nd.length-1].Lat;
   var Lng = nd[nd.length-1].Lng;
   var Gain = nd[nd.length-1].gain;
@@ -117,6 +118,119 @@ async function getPrediction(){
   
 }
 
+async function addLines(){
+  var lineRes = await fetch('/api/v1/hotspots');
+  var lineData = await lineRes.json(); 
+  console.log(lineData.data); 
+  var lines = lineData.data.map(line => {
+    return {
+
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [line.Lng, line.Lat],
+          [storage.getItem('TestLng'),storage.getItem('TestLat')]
+        ]// icon position [lng, lat]
+      }
+    }
+  });
+  var Linehotspots = lineData.data.map(Linehotspot => {
+    //if(hotspot.status.online == 'online'){ 
+    return {
+
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [Linehotspot.Lng, Linehotspot.Lat] // icon position [lng, lat]
+      },
+      properties: {
+        description:
+          //'blabla'
+          '<p> </p>' +
+          '<p><strong>Name: </strong>' + Linehotspot.gain +
+          '<p><strong>Gain: </strong>' + Linehotspot.elevation +'</p>'
+      }
+    }
+  });
+  map.on('load', ()=>{
+  map.addSource('lines', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: lines,
+    }
+
+  });
+  map.addLayer({
+    'id': 'lines',
+    'type': 'line',
+    'source': 'lines',
+    'layout': {
+    'line-join': 'round',
+    'line-cap': 'round'
+    },
+    'paint': {
+    'line-color': '#888',
+    'line-width': 4
+    }
+    });
+  });
+  map.addSource('linenode', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: Linehotspots,
+    }
+
+  });
+
+  map.addLayer({
+    'id': 'linenode',
+    'type': 'circle',
+    'source': 'linenode',
+    'paint': {
+    'circle-color': '#fbb03b',
+    'circle-radius': 5,
+    'circle-stroke-width': 2,
+    'circle-stroke-color': '#ffffff'
+    }
+    });
+    //click and popup
+  var popup = new mapboxgl.Popup({
+    closeButton: false,
+    closeOnclick: false
+  });
+  // Change the cursor to a pointer when the mouse is over the places layer.
+  map.on('mouseenter', 'linenode', function (Linehotspots) {
+    map.getCanvas().style.cursor = 'pointer';
+
+    // Copy coordinates array.
+    const coordinates = Linehotspots.features[0].geometry.coordinates.slice();
+    const description = Linehotspots.features[0].properties.description;
+
+    // Ensure that if the map is zoomed out such that multiple
+    // copies of the feature are visible, the popup appears
+    // over the copy being pointed to.
+    while (Math.abs(Linehotspots.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += Linehotspots.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+
+    popup.setLngLat(coordinates).setHTML(description).addTo(map);
+  });
+
+  // Change it back to a pointer when it leaves.
+  map.on('mouseleave', 'linenode', function () {
+    map.getCanvas().style.cursor = '';
+    popup.remove();
+  });
+  
+
+
+
+}
+addLines();
+
 // Add marker(added node) by click 
 async function add_marker(event) {
   
@@ -131,7 +245,7 @@ async function add_marker(event) {
 
 
   // Update API link
-  originalUrl = 'https://api.helium.io/v1/hotspots/location/distance?lat=' + Lat + '&lon=' + Lng + '&distance=5000';
+  originalUrl = 'https://api.helium.io/v1/hotspots/location/distance?lat=' + Lat + '&lon=' + Lng + '&distance=2000';
   console.log(originalUrl);
 
 
@@ -407,6 +521,12 @@ function loadMap(hotspots,offhotspots) {
 
 // on click
 map.on('click', (event) => {
+  if (Static.counter == 0){
+  map.removeSource('lines');
+  map.removeLayer('lines');
+  map.removeSource('linenode');
+  map.removeLayer('linenode');
+}
   add_marker(event);
   map.flyTo({
     center: event.lngLat,
