@@ -43,16 +43,23 @@ function confi(){
   HNT.innerHTML = `Loading...`; 
   
 }
-async function getConfi(){
+function prediction(){
+  predict.innerHTML = `Loading...`; 
+  
+}
+async function getResults(){
   //need change api to confidence interval
   var confiRes = await fetch('https://localhost:3000/simulate');
   var confiData = await confiRes.json();
 
   var confiLow = confiData.data.interval[0];
   var confiHigh =  confiData.data.interval[1];
+  var pdPD = confiData.rewards;
   HNT.innerHTML = `Confidence Interval:   (${confiLow},${confiHigh}) HNT`
-  
+  predict.innerHTML = `Prediction:   ${pdPD} HNT`; 
 }
+
+
 
 // Get calculated prediction from backend
 // async function getPrediction(){
@@ -66,7 +73,18 @@ async function getConfi(){
 //   HNT.innerHTML = `HNT Price:   $${hntPrice}`
   
 // }
-async function getNodeinfor(){
+
+
+var map = new mapboxgl.Map({
+  container: "map",
+  style: 'mapbox://styles/shapei36e/cl822g760004a15sey3q5ovoo',
+  zoom: 12,
+  center: [-87.623177, 41.881832]
+});
+
+// Get prediction
+
+async function addLines(){
   var ndRes = await fetch('/api/v1/hotspots');
   var ndData = await ndRes.json();
   var nd = ndData.data;
@@ -85,42 +103,9 @@ async function getNodeinfor(){
   marker.setLngLat(Test_cor).addTo(map);
   map.flyTo({center: Test_cor}); 
   Coord.innerHTML= `Longitude: ${storage.getItem('TestLng')}<br />Latitude: ${storage.getItem('TestLat')}`;
-}
-getNodeinfor();
-
-var map = new mapboxgl.Map({
-  container: "map",
-  style: 'mapbox://styles/shapei36e/cl822g760004a15sey3q5ovoo',
-  zoom: 12,
-  center: [-87.623177, 41.881832]
-});
-
-// Get prediction
-function prediction(){
-  predict.innerHTML = `Loading...`; 
-  
-}
-async function getPrediction(){
- 
-  var pdRes = await fetch('http://localhost:3000/simulate');
-  var pdData = await pdRes.json();
-
-  var pdPD = pdData.rewards; 
-  console.log(pdData); 
- 
-  
-  predict.innerHTML = `Prediction:   ${pdPD} HNT`; 
 
   
-  
-  
-}
-
-async function addLines(){
-  var lineRes = await fetch('/api/v1/hotspots');
-  var lineData = await lineRes.json(); 
-  console.log(lineData.data); 
-  var lines = lineData.data.map(line => {
+  var lines = nd.map(line => {
     return {
 
       type: 'Feature',
@@ -133,7 +118,7 @@ async function addLines(){
       }
     }
   });
-  var Linehotspots = lineData.data.map(Linehotspot => {
+  var Linehotspots = nd.map(Linehotspot => {
     //if(hotspot.status.online == 'online'){ 
     return {
 
@@ -683,10 +668,8 @@ function placeholder(){
 
 nodeForm.addEventListener('submit', addNodes);
 confi();
-getHNTPrice(); 
-
 prediction();
-getPrediction();
+getResults();
 placeholder();
 
 
