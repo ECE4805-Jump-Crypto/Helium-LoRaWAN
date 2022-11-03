@@ -504,7 +504,7 @@ function loadMap(hotspots,offhotspots) {
 
 // on click
 map.on('click', (event) => {
-  if (Static.counter == 0){
+  if (Static.counter == 0 && map.getSource('lines')!=null){
   map.removeSource('lines');
   map.removeLayer('lines');
   map.removeSource('linenode');
