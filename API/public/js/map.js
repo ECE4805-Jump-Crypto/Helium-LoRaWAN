@@ -148,8 +148,8 @@ async function addLines(){
         description:
           //'blabla'
           '<p> </p>' +
-          '<p><strong>Name: </strong>' + Linehotspot.gain +
-          '<p><strong>Gain: </strong>' + Linehotspot.elevation +'</p>'
+          '<p><strong>Gain: </strong>' + Linehotspot.gain +
+          '<p><strong>Elevation: </strong>' + Linehotspot.elevation +'</p>'
       }
     }
   });
