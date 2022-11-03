@@ -52,9 +52,9 @@ async function getResults(){
   var confiRes = await fetch('https://localhost:3000/simulate');
   var confiData = await confiRes.json();
 
-  var confiLow = confiData.data.interval[0];
-  var confiHigh =  confiData.data.interval[1];
-  var pdPD = confiData.rewards;
+  var confiLow = confiData.data.interval[0].toFixed(2);
+  var confiHigh =  confiData.data.interval[1].toFixed(2);
+  var pdPD = confiData.rewards.toFixed(2);
   HNT.innerHTML = `Confidence Interval:   (${confiLow},${confiHigh}) HNT`
   predict.innerHTML = `Prediction:   ${pdPD} HNT`; 
 }
