@@ -3,7 +3,7 @@ lat=37.23995058781802
 agl=10
 gain=5.8
 srtm_precision=1
-dst=15000
+dst=20000
 address = '11KE7DCsrDPmaxmpUWvYHZqs8Gz8HdAkmr7h7MAU3vVLDDjwj9K'
 
 nearby_nodes = [

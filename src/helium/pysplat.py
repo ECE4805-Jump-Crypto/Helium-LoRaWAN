@@ -28,6 +28,8 @@ class PySplat:
         self.no_connection = 'no-connection'
         self.rssi_no_connection = -200
         self.los_no_connection = 1000
+        self.los_min_clearance = 70
+        self.fspl_los = 25
         self.link_freq = 905
         self.simulated_tx_power_db = 27
         self.simulated_cable_loss_db = 0.8
@@ -106,18 +108,18 @@ class PySplat:
                 path_loss, los_out = utils.read_splat_results(splat_params[2], splat_params[4])
             elif status == self.run_unkown_error:
                 path_loss = utils.fspl_db(distance, self.link_freq)
-                los_out = self.los_no_connection
+                los_out = self.fspl_los
+                signal_power_out = utils.link_budget(self.simulated_tx_power_db, self.simulated_cable_loss_db, self.gain - 2.15, path_loss, point_2_gain - 2.15, self.unknown_cable_loss_db)
+                return signal_power_out, signal_power_out, self.los_no_connection
             else:
-                path_loss = 500
-                los_out = self.los_no_connection
-            
+                return self.rssi_no_connection, self.rssi_no_connection, self.los_no_connection
             if splat_params[2] == point_1:
                 signal_power_out = utils.link_budget(self.simulated_tx_power_db, self.simulated_cable_loss_db, self.gain - 2.15, path_loss, point_2_gain - 2.15, self.unknown_cable_loss_db)
-                if los_out != self.los_no_connection and los_out != 0:
+                if los_out != 0:
                     los_out = los_out - self.agl
             else:
                 signal_power_out = utils.link_budget(self.unkown_tx_power_db, self.unknown_cable_loss_db, point_2_gain - 2.15, path_loss, self.gain - 2.15, self.simulated_cable_loss_db)
-                if los_out != self.los_no_connection and los_out != 0:
+                if los_out != 0:
                     los_out = los_out - point_2_agl
 
             receiver_signal_strength.append(signal_power_out)
@@ -155,6 +157,7 @@ class PySplat:
         """
 
         if los_clearance < self.los_clearance_threshold: return self.bi_directional
+        elif los_clearance == self.los_no_connection or los_clearance > self.los_min_clearance: return self.no_connection
         elif tx_rssi < self.rssi_threshold_db and rx_rssi < self.rssi_threshold_db: return self.bi_directional
         elif tx_rssi < self.rssi_threshold_db: return self.tx_only
         elif rx_rssi < self.rssi_threshold_db: return self.rx_only

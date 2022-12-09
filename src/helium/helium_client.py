@@ -19,6 +19,7 @@ class HeliumClient:
         self.backoff_factor = 3
         self.deny_sleep_time = 30
         self.forcelist = [403, 404, 429, 500, 502, 503, 504]
+        self.etl_sleep_time = 2
         self.user_agent_header = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'}
         self.session = requests.Session()
         self.update_session()
@@ -65,8 +66,27 @@ class HeliumClient:
         url = 'https://etl.hotspotty.org/api/v1/hotspots/history/summary-v4-lean/'
         payload = {'hotspotIds': hotspot_ids}
         header = {'Content-Type': 'application/json', 'User-Agent': self.user_agent_header['User-Agent']}
-        response = requests.post(url, headers=header, json=payload).json()
-        rewards = response['data']
+        rewards = []
+        success = False
+        retry_count = 0
+        while not success and retry_count < self.max_call_retries:
+            response = requests.post(url, headers=header, json=payload)
+            if response.status_code == 200:
+                try:
+                    response = response.json()    
+                    rewards = response['data']
+                except requests.exception.JSONDecodeError as e:
+                    self.api_logger.critical('Got JSON decode error from summary rewards request')
+                except:
+                    self.api_logger.error('Could not access rewads data from rewards summary response')
+                else:
+                    success = True
+                    break
+            else:
+                self.api_logger.warnings(f'got status code response {response.status_code}, trying agian')
+                time.sleep(self.etl_sleep_time)
+            retry_count += 1
+        
         return rewards
     
     
@@ -76,8 +96,26 @@ class HeliumClient:
         url = 'https://etl.hotspotty.org/api/v1/hotspots/witnesses-lean/'
         payload = {'hotspotIds': hotspot_ids}
         header = {'Content-Type': 'application/json', 'User-Agent': self.user_agent_header['User-Agent']}
-        response = requests.post(url, headers=header, json=payload).json()
-        rewards = response['data']
+        rewards = []
+        success = False
+        retry_count = 0
+        while not success and retry_count < self.max_call_retries:
+            response = requests.post(url, headers=header, json=payload)
+            if response.status_code == 200:
+                try:
+                    response = response.json()    
+                    rewards = response['data']
+                except requests.exception.JSONDecodeError as e:
+                    self.api_logger.critical('Got JSON decode error from summary witness request')
+                except:
+                    self.api_logger.error('Could not access rewads data from summary witness response')
+                else:
+                    success = True
+                    break
+            else:
+                self.api_logger.warnings(f'got status code response {response.status_code}, trying agian')
+                time.sleep(self.etl_sleep_time)
+            retry_count += 1
         return rewards
     
        
@@ -92,12 +130,17 @@ class HeliumClient:
     def get_etl_poc_events(self, hotspot_id: str, stop_time: int, limit: int) -> list:
 
         events = []
-        url = f'https://helium-api.hotspotty.org/v1/hotspots/{hotspot_id}/roles?filter_types=poc_receipts_v2'
+        url = f'https://api.helium.io/v1/hotspots/{hotspot_id}/roles?filter_types=poc_receipts_v2'
         cursor = ''
         min_time = time.time()
         while min_time > stop_time:
-            response = requests.get(url + cursor).json()
-            poc_events = response['data']
+            try:
+                response = requests.get(url + cursor).json()
+                time.sleep(self.etl_sleep_time)
+                poc_events = response['data']
+            except KeyError as e:
+                self.api_logger.info('got key error in etl poc events')
+                return events
             for poc_event in poc_events:
                 min_time = poc_event['time']
                 if min_time < stop_time: break

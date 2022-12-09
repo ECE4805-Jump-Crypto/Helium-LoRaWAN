@@ -19,14 +19,17 @@ class HeliumHotspot:
         self.dst = _dst
         self.srtm_precision = _srtm_precision
         self.bone_per_hnt = 100_000_000
-        self.poc_reward_units_per_week = 30287999
+        self.poc_reward_units_per_week = 21_148_400
         self.hnt_per_epoch = 1736.1111
         self.epoch_per_week = 336
         self.witness_hnt_dist = 0.489
-        self.challenge_hnt_dist = 0.122
-        self.max_rf_analysis = 25
+        self.challenge_hnt_dist = 0.1225
+        self.max_rf_analysis = 50
         self.witness_hnt_per_week = self.hnt_per_epoch * self.epoch_per_week * self.witness_hnt_dist
         self.challenge_hnt_per_week = self.hnt_per_epoch * self.epoch_per_week * self.challenge_hnt_dist
+        self.knn_exclusion_limits = 2
+        self.min_sample_rf = 3
+        self.tx_scale = 1
         
         # dependent attrs
         self.api_etl_client = HeliumClient()
@@ -47,6 +50,7 @@ class HeliumHotspot:
         self.link_earnings_interval = None
         self.ensemble_prediction = None
         self.ensemble_interval = None
+        self.use_weights = None
 
         # computed attrs
         self.poc_exclusion_res = self.chain_vars['poc_v4_parent_res']
@@ -67,10 +71,17 @@ class HeliumHotspot:
         self.find_nearby_hotspots()
         self.filter_knn_hotspots()
         self.filter_link_candidates()
-        self.filter_link_status()       
-        self.compute_link_earnings()
-        self.link_earnings_predict()
-        self.knn_predict()
+        self.filter_link_status()
+        if self.num_valid_links < self.min_sample_rf:
+            self.use_weights = False
+            self.knn_predict()   
+            self.link_earnings_prediction = self.proximate_knn_prediction
+            self.link_earnings_interval = self.proximate_knn_interval
+        else:
+            self.use_weights = True
+            self.knn_predict()   
+            self.compute_link_earnings()
+            self.link_earnings_predict()
         self.ensemble_predict()
         return self.ensemble_prediction, self.ensemble_interval, self.link_earnings_prediction, self.proximate_knn_prediction
 
@@ -120,6 +131,7 @@ class HeliumHotspot:
         num_kept = len(valid_hotspots)
         hotspot_logger.info(f'there were {num_nearby} hotspots and {num_kept} left after knn-filtering')
         self.knn_candidates = valid_hotspots
+        self.k = len(valid_hotspots)
         return
     
     
@@ -127,14 +139,22 @@ class HeliumHotspot:
         """Filter one more time for rf analysis. Impose too-close requirements."""
 
         valid_hotspots = []
+        valid_knn_hotspots = []
         for hotspot in self.knn_candidates:
             lat = hotspot['lt']
             lng = hotspot['lg']
-            if self.in_exclusion_limits(lat, lng):
+            if not self.in_knn_exclusion_limits(lat, lng):
+                valid_knn_hotspots.append(hotspot)
+            else:
+                self.tx_scale = hotspot['rs']
+            if self.in_rf_exclusion_limits(lat, lng):               
                 self.filtered_hotspots.append({'reason': 'too-close', 'hotspot': hotspot['id'], 'name': hotspot['n']})
             else:
                 valid_hotspots.append(hotspot)
 
+        hotspot_logger.info(f'found tx scale = {self.tx_scale}')
+        self.knn_candidates = valid_knn_hotspots
+        self.k = len(valid_knn_hotspots)
         num_knn = len(self.knn_candidates)
         num_kept = len(valid_hotspots)
         if num_kept > self.max_rf_analysis:
@@ -150,14 +170,14 @@ class HeliumHotspot:
         """Generate a proximate knn prediction."""
 
         hotspot_logger.info(f'generating knn prediction')
-        self.k = self.num_valid_links
         ids = [hotspot['id'] for hotspot in self.knn_candidates]
         rewards_response = self.api_etl_client.get_etl_rewards_summary(ids)
         witnesses_response = self.api_etl_client.get_etl_witness_summary(ids)
-        hnt_rewards, weights = self.build_knn_weights(rewards_response, witnesses_response)  
-
+        hnt_rewards, weights = self.build_knn_weights(rewards_response, witnesses_response,)  
+        if self.use_weights:
+            weights = np.ones(weights.shape)
         low_bound, upper_bound = np.percentile(hnt_rewards, [2.5, 97.5])
-        self.proximate_knn_prediction = np.mean(hnt_rewards)
+        self.proximate_knn_prediction = np.average(hnt_rewards, weights=weights)
         self.proximate_knn_interval = [low_bound, upper_bound]
         return
     
@@ -175,7 +195,7 @@ class HeliumHotspot:
             for w in witnesses:
                 if r['id'] == w['id']:
                     hnt_rewards[i] = r['rewards']['w'] / self.bone_per_hnt
-                    distances[i] = np.abs(self.k - w['wO']['v']) + 0.2
+                    distances[i] = np.abs(self.num_valid_links - w['wO']['v']) + 0.2
                     weights[i] = 1.0 / distances[i]
                     total += weights[i]
                     i += 1
@@ -191,6 +211,7 @@ class HeliumHotspot:
             hotspot_logger.critical('cannot compute link earnings with no valid links')
             return
         
+        hotspot_logger.info('generating link earnings prediction')
         self.compute_poc_tx_rewards_units()
 
         now = datetime.now()
@@ -202,11 +223,11 @@ class HeliumHotspot:
             link['tx_freq'] = len(poc_events)
             link['weekly_witness_reward_units'] = link['tx_freq'] * link['tsrxru']
             link['weekly_witness_hnt'] = self.witness_hnt_per_week * (link['weekly_witness_reward_units'] / self.poc_reward_units_per_week) 
-            self.link_earnings.append(link['weekly_witness_hnt'])
+            self.link_earnings.append(link['weekly_witness_hnt'] * self.tx_scale)
             total_poc_events += link['tx_freq']
         
         avg_tx_freq = total_poc_events / self.num_valid_links
-        weekly_challenge_reward_units = self.poc_tx_reward_units * avg_tx_freq
+        weekly_challenge_reward_units = self.poc_tx_reward_units * avg_tx_freq * self.tx_scale
         weekly_challenge_hnt = self.challenge_hnt_per_week * (weekly_challenge_reward_units / self.poc_reward_units_per_week)
         self.link_earnings.append(weekly_challenge_hnt)
         return
@@ -233,15 +254,18 @@ class HeliumHotspot:
         """Generate a link earnings model prediction."""
 
         self.link_earnings_prediction = sum(self.link_earnings)
+        self.link_earnings_interval = [0.8*self.link_earnings_prediction, 1.2*self.link_earnings_prediction]
         return
 
     def ensemble_predict(self) -> None:
         """Generate an ensemble prediction."""
 
-
         self.ensemble_prediction = np.mean([self.link_earnings_prediction, self.proximate_knn_prediction])
-        self.ensemble_interval = self.proximate_knn_interval
-        pass  
+        self.ensemble_interval = [
+            min(self.link_earnings_interval[0], self.proximate_knn_interval[0]),
+            max(self.link_earnings_interval[1], self.proximate_knn_interval[1])
+        ]
+        return 
     
     def status_valid(self, online: bool, sync: bool, deny_list: bool) -> bool:
         """Return true if hotspot status is valid."""
@@ -261,12 +285,20 @@ class HeliumHotspot:
         return bool(distance < self.dst)
     
     
-    def in_exclusion_limits(self, lat: float, lng: float) -> bool:
+    def in_rf_exclusion_limits(self, lat: float, lng: float) -> bool:
         """Return true if hospot is in exclusion limit."""
 
         hotspot_exclusion_hex = utils.latlng_to_hex(lat, lng, self.poc_exclusion_res)
         exclusion_distance = utils.get_hex_distance(self.poc_exclusion_hex, hotspot_exclusion_hex)
         return bool(exclusion_distance < self.poc_exclusion_limit)
+    
+    def in_knn_exclusion_limits(self, lat: float, lng: float) -> bool:
+        """Return true if hospot is in exclusion limit."""
+
+        hotspot_exclusion_hex = utils.latlng_to_hex(lat, lng, self.poc_exclusion_res)
+        exclusion_distance = utils.get_hex_distance(self.poc_exclusion_hex, hotspot_exclusion_hex)
+        return bool(exclusion_distance < self.knn_exclusion_limits)
+    
     
 
     

@@ -216,7 +216,7 @@ if __name__ == '__main__':
                             hover_data=['actual', 'predicted_mean', 'predicted_median'],
                             size='size',
                             color='error_mean',
-                            zoom=8, 
+                            zoom=8,  
                             height=1200,
                             width=1200)
 
