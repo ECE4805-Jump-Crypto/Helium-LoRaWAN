@@ -47,13 +47,23 @@ Run the code:
 python3 -m simulate -h
 ```
 
-To start the backend server:
+To run with web gui, first start the front end:
+```
+cd frontend
+sudo docker build . -t helium-frontned
+sudo docker run -d -p 5000:5000 helium-frontend
+```
+
+Verify the front end is running at localhost:5000
+
+Then start the backend server:
 ```
 python3 -m src.server
 ```
 
 This will start a flask server running at 0.0.0.0 port 3000
-Ensure that the front end gui is also running. Check repository for how to start
+
+Navigate to the front end and start experimenting :)
 
 
 

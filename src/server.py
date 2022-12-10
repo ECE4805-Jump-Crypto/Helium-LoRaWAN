@@ -14,16 +14,15 @@ srtm_precision = 1
 @app.route("/simulation", methods=['GET'])
 def run_simulation():
     try:
-        response = requests.get(hotspot_url).json()['data']
-        hotspot_data = np.array(response[-1])
-        lat = hospot_data['Lat']
-        lng = hospot_data['Lng']
-        agl = hospot_data['elevation']
-        gain = data['gain']
+        response = requests.get(hotspot_url).json()['data'][-1]
+        lat = response['Lat']
+        lng = response['Lng']
+        agl = response['elevation']
+        gain = response['gain']
+        server_logger.info(f'ran simulation for hotspot lat={lat} lng={lng} agl={agl} gain={gain}')
         hotspot = HeliumHotspot(lat, lng, agl, gain, dst, srtm_precision)
-        prediction, confidence_interval = hotspot.predict_weekly_earnings()
-        server_logger.info(f'ran simulation for hotspot lat={lat} lng={lng}')
-        return jsonify({'rewards': prediction, 'interval': confidence_interval})
+        ensemble_out, ensemble_interval, link_out, knn_out = hotspot.predict_weekly_earnings()
+        return jsonify({'rewards': ensemble_out, 'interval': ensemble_interval})
     except Exception as e:
         server_logger.critical('an exception occured')
         server_logger.critical(str(e))  

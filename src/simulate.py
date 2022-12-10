@@ -23,22 +23,15 @@ def main() -> None:
     main_logger.info('starting simulation')
     try:
         hotspot = HeliumHotspot(args.lat, args.lng, args.agl, args.gain, args.dst, args.srtm)
-        res, interval = hotspot.predict_weekly_earnings()
+        ensemble_out, ensemble_interval, link_out, knn_out = hotspot.predict_weekly_earnings()
     except Exception as e:
         main_logger.critical('an exception occured')
         main_logger.critical(str(e))
     
     main_logger.info('simulation successful')
-    main_logger.info(f'predicted weekly earnings = {res}')
-    main_logger.info(f'confidence interval = ({interval[0]}, {interval[1]})')
+    main_logger.info(f'predicted weekly earnings = {ensemble_out}')
+    main_logger.info(f'confidence interval = {ensemble_interval}')
     return
-    #hotspot.update_node_candidates()
-    #hotspot.rf_analysis()
-    #hotspot.rf_summary(compare_to = '11ZWzxwiFC3vJ4hmsacs33f2QqQhPSoHvBPe9iHV6sBsErq5sSE')
-    #hotspot.knn_predict()
-    #hotspot.deterministic_predict()
-    #hotspot.ensemble_predict()
-    #hotspot.mining_rewards_summary()
 
 
 if __name__ == '__main__':
