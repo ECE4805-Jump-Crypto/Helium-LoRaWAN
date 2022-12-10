@@ -49,7 +49,7 @@ python3 -m simulate -h
 
 To run with web gui, first start the front end:
 ```
-cd frontend
+cd frontend-gui
 sudo docker build . -t helium-frontned
 sudo docker run -d -p 5000:5000 helium-frontend
 ```
