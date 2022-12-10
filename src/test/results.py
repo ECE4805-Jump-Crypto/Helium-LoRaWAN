@@ -9,7 +9,8 @@ def relative_error(predicted: float, actual: float) -> float:
 
 test_file = [
     'src/test/results/test_results_12-09-2022-07-43-33.json',
-    'src/test/results/test_results_12-09-2022-11-27-47.json'
+    'src/test/results/test_results_12-09-2022-11-27-47.json',
+    'src/test/results/test_results_12-09-2022-19-14-51.json'
 ]
 
 data = []

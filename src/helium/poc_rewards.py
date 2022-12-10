@@ -101,6 +101,7 @@ def main() -> None:
                 
     plt.plot(range(num_challenges), total_ru, '*')
     plt.title('Estimating total rewards units per week by hotspot')
+    plt.ylim([0, 5e7])
     plt.show()
 
     plt.hist(witness_freq)
@@ -128,47 +129,6 @@ def main() -> None:
     plt.show()
         
 if __name__ == '__main__':
-    #main()
-    pass 
-
-
-rewards = {}
-epochs = 336
-block_height = 1650738
-for i in  range(epochs):
-    print(i , '/', epochs, block_height)
-    unique = set()
-    rewards_transaction_url = f'https://api.helium.io/v1/blocks/{block_height}/transactions'
-    response = requests.get(rewards_transaction_url)
-    sleep_time = 1
-    while response.status_code != 200:
-        time.sleep(sleep_time)
-        sleep_time = sleep_time * 2
-        response = requests.get(rewards_transaction_url)
-    
-    response = response.json()['data']
-    timestamp = ''
-    poc_rewards = []
-    for r in response:
-        if r['type'] == 'rewards_v2':
-            block_height = r['start_epoch'] - 1
-            timestamp = datetime.fromtimestamp(r['time']).strftime("%m-%d-%Y")
-            poc_rewards = r['rewards']
-            if timestamp not in rewards:
-                rewards[timestamp] = 0
-            for reward in poc_rewards:
-                if reward['type'] in poc_reward_types and reward['gateway'] not in unique:
-                    rewards[timestamp] += 1
-                    unique.add(reward['gateway'])
-
-print(rewards)
-days = np.array([x for x in rewards.keys()])
-gateways = np.array([x for x in rewards.values()])
-idxs = np.argsort(days)
-plt.bar(days[idxs], gateways[idxs])
-plt.title('Unique number of Hotspots engaging in PoC events by day')
-plt.xlabel('Time - days')
-plt.ylabel('Number of unique Hotspots')
-plt.show()
+    main()
         
     
